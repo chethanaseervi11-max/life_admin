@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Life Admin — Put it somewhere you'll remember</title>
+  <meta name="description" content="A calm personal dashboard for remembering responsibilities, deadlines, renewals, appointments, and life administration.">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- Favicon and PWA -->
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon.svg">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Lucide Icons CDN with offline fallback -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 100 100" width="28" height="28" fill="none">
+              <rect x="10" y="10" width="80" height="80" rx="20" fill="currentColor" fill-opacity="0.12" />
+              <rect x="22" y="26" width="56" height="48" rx="10" stroke="currentColor" stroke-width="6" />
+              <circle cx="50" cy="50" r="11" stroke="currentColor" stroke-width="4" stroke-dasharray="3 3" />
+              <path d="M44 50 L48 54 L56 45" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Life Admin</h1>
+            <span class="brand-tagline">On your radar</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+          <span class="nav-badge" id="nav-badge-attention">0</span>
+        </button>
+        <button class="nav-item" data-view="timeline" id="nav-timeline">
+          <i data-lucide="git-commit"></i>
+          <span>Timeline</span>
+        </button>
+        <button class="nav-item" data-view="upcoming" id="nav-upcoming">
+          <i data-lucide="calendar-range"></i>
+          <span>Upcoming</span>
+        </button>
+        <button class="nav-item" data-view="completed" id="nav-completed">
+          <i data-lucide="check-circle-2"></i>
+          <span>Completed</span>
+          <span class="nav-badge completed-badge" id="nav-badge-completed">0</span>
+        </button>
+        <button class="nav-item" data-view="settings" id="nav-settings">
+          <i data-lucide="sliders-horizontal"></i>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Minimal Quick Stats -->
+      <div class="sidebar-summary">
+        <div class="summary-card">
+          <div class="summary-metric">
+            <span class="metric-number text-urgent" id="stat-sidebar-attention">0</span>
+            <span class="metric-label">Need Attention</span>
+          </div>
+          <div class="summary-metric">
+            <span class="metric-number text-calm" id="stat-sidebar-upcoming">0</span>
+            <span class="metric-label">Coming Up</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="shortcut-tip">
+          <kbd>/</kbd> to quickly add
+        </div>
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper" id="main-content">
+      <!-- Top Mobile / Compact Header -->
+      <header class="top-header">
+        <div class="top-header-left">
+          <div class="brand mobile-brand">
+            <div class="brand-icon">
+              <svg viewBox="0 0 100 100" width="24" height="24" fill="none">
+                <rect x="10" y="10" width="80" height="80" rx="20" fill="currentColor" fill-opacity="0.12" />
+                <rect x="22" y="26" width="56" height="48" rx="10" stroke="currentColor" stroke-width="6" />
+                <circle cx="50" cy="50" r="11" stroke="currentColor" stroke-width="4" stroke-dasharray="3 3" />
+                <path d="M44 50 L48 54 L56 45" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h1 class="brand-title">Life Admin</h1>
+          </div>
+          <span class="header-date" id="header-today-date">Today</span>
+        </div>
+        <div class="top-header-right">
+          <button class="theme-toggle-btn mobile-theme-btn" id="mobile-theme-toggle" aria-label="Toggle theme">
+            <i data-lucide="moon" id="mobile-theme-icon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: MAIN DASHBOARD -->
+      <section class="view-panel active" id="view-dashboard" aria-labelledby="greeting-heading">
+        <!-- Dashboard Hero Greeting -->
+        <div class="dashboard-hero">
+          <div class="greeting-wrap">
+            <h2 class="greeting-title" id="greeting-heading">Good morning 👋</h2>
+            <p class="greeting-subtitle">Here's what needs your attention.</p>
+          </div>
+          <!-- Minimal Stat Pills -->
+          <div class="stats-pills" id="dashboard-stats-strip">
+            <div class="stat-pill overdue-pill" id="stat-pill-overdue-wrap" style="display: none;">
+              <span class="stat-dot overdue"></span>
+              <span class="stat-count" id="stat-overdue-count">0</span>
+              <span class="stat-text">Overdue</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-dot attention"></span>
+              <span class="stat-count" id="stat-attention-count">0</span>
+              <span class="stat-text">Need Attention</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-dot upcoming"></span>
+              <span class="stat-count" id="stat-upcoming-count">0</span>
+              <span class="stat-text">Coming Up</span>
+            </div>
+            <div class="stat-pill completed">
+              <span class="stat-dot completed"></span>
+              <span class="stat-count" id="stat-completed-count">0</span>
+              <span class="stat-text">Completed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prominent Quick Add Area -->
+        <div class="quick-add-container">
+          <label for="quick-add-input" class="quick-add-label">What do you need to remember?</label>
+          <form class="quick-add-form" id="quick-add-form" autocomplete="off">
+            <div class="quick-add-box">
+              <i data-lucide="sparkles" class="input-leading-icon"></i>
+              <input 
+                type="text" 
+                id="quick-add-input" 
+                class="quick-add-input" 
+                placeholder="e.g. Renew passport next month, Doctor appointment tomorrow at 4 PM"
+                aria-label="What do you need to remember?"
+              >
+              <button type="submit" class="btn btn-primary add-submit-btn" id="btn-quick-add">
+                <i data-lucide="plus"></i>
+                <span>Add</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Live NLP Parse Indicator Pill -->
+          <div class="nlp-live-preview" id="nlp-live-preview" style="display: none;">
+            <div class="nlp-preview-content">
+              <span class="nlp-badge" id="nlp-preview-date"></span>
+              <span class="nlp-badge" id="nlp-preview-time" style="display: none;"></span>
+              <span class="nlp-badge category" id="nlp-preview-category"></span>
+              <span class="nlp-hint">Press Enter to save</span>
+            </div>
+          </div>
+
+          <!-- Quick Example Chips (Helpful for first-time or quick ideas) -->
+          <div class="example-chips" id="example-chips-container">
+            <span class="chip-label">Try:</span>
+            <button type="button" class="example-chip" data-example="Doctor appointment tomorrow at 4 PM">Doctor tomorrow 4 PM</button>
+            <button type="button" class="example-chip" data-example="Submit scholarship application by October 12">Scholarship by Oct 12</button>
+            <button type="button" class="example-chip" data-example="Laptop warranty expires March 15 2027">Laptop warranty March 15</button>
+            <button type="button" class="example-chip" data-example="Cancel Netflix subscription before November 5">Cancel Netflix Nov 5</button>
+          </div>
+        </div>
+
+        <!-- Search and Quick Filter Controls -->
+        <div class="filter-toolbar">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="search-input" class="search-input" placeholder="Search responsibilities, categories, dates..." aria-label="Search responsibilities">
+            <button type="button" class="search-clear-btn" id="search-clear-btn" aria-label="Clear search" style="display: none;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+
+          <div class="filter-pills" role="tablist" aria-label="Urgency Filter">
+            <button type="button" class="filter-pill active" data-filter="all">All</button>
+            <button type="button" class="filter-pill" data-filter="overdue">Overdue</button>
+            <button type="button" class="filter-pill" data-filter="today">Today</button>
+            <button type="button" class="filter-pill" data-filter="this-week">This Week</button>
+            <button type="button" class="filter-pill" data-filter="coming-up">Coming Up</button>
+          </div>
+
+          <div class="category-dropdown-wrap">
+            <select id="category-filter-select" class="category-select" aria-label="Filter by category">
+              <option value="all">All Categories</option>
+              <option value="documents">📄 Documents</option>
+              <option value="education">🎓 Education</option>
+              <option value="payments">💳 Payments</option>
+              <option value="renewals">🔄 Renewals</option>
+              <option value="warranties">🛠️ Warranties</option>
+              <option value="appointments">📅 Appointments</option>
+              <option value="applications">📝 Applications</option>
+              <option value="events">🎫 Events</option>
+              <option value="subscriptions">📦 Subscriptions</option>
+              <option value="personal">🏠 Personal</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- First-Time Welcome Banner (Dismissible) -->
+        <div class="welcome-banner" id="welcome-banner" style="display: none;">
+          <div class="welcome-icon">👋</div>
+          <div class="welcome-body">
+            <h3>Welcome to Life Admin</h3>
+            <p>Put the things you don't want to forget here. Type what's on your mind above, and we'll keep it on your radar so nothing falls through the cracks.</p>
+            <div class="welcome-actions">
+              <button class="btn btn-sm btn-outline" id="btn-load-samples">Load Sample Responsibilities</button>
+              <button class="btn btn-sm btn-ghost" id="btn-dismiss-welcome">Dismiss</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Urgency Sections -->
+        <div class="urgency-sections-container" id="dashboard-sections">
+          <!-- Overdue Section -->
+          <section class="urgency-group overdue-group" id="group-overdue" style="display: none;">
+            <div class="group-header">
+              <div class="group-title-wrap">
+                <span class="urgency-indicator-dot dot-overdue"></span>
+                <h3 class="group-title">OVERDUE</h3>
+                <span class="group-count" id="count-overdue">0</span>
+              </div>
+              <span class="group-subtitle">Requires immediate action</span>
+            </div>
+            <div class="items-grid" id="items-grid-overdue"></div>
+          </section>
+
+          <!-- Today Section -->
+          <section class="urgency-group today-group" id="group-today">
+            <div class="group-header">
+              <div class="group-title-wrap">
+                <span class="urgency-indicator-dot dot-today"></span>
+                <h3 class="group-title">TODAY</h3>
+                <span class="group-count" id="count-today">0</span>
+              </div>
+              <span class="group-subtitle">Things that need attention today</span>
+            </div>
+            <div class="items-grid" id="items-grid-today"></div>
+          </section>
+
+          <!-- This Week Section -->
+          <section class="urgency-group thisweek-group" id="group-this-week">
+            <div class="group-header">
+              <div class="group-title-wrap">
+                <span class="urgency-indicator-dot dot-thisweek"></span>
+                <h3 class="group-title">THIS WEEK</h3>
+                <span class="group-count" id="count-this-week">0</span>
+              </div>
+              <span class="group-subtitle">Due within the next 7 days</span>
+            </div>
+            <div class="items-grid" id="items-grid-this-week"></div>
+          </section>
+
+          <!-- Coming Up Section -->
+          <section class="urgency-group comingup-group" id="group-coming-up">
+            <div class="group-header">
+              <div class="group-title-wrap">
+                <span class="urgency-indicator-dot dot-comingup"></span>
+                <h3 class="group-title">COMING UP</h3>
+                <span class="group-count" id="count-coming-up">0</span>
+              </div>
+              <span class="group-subtitle">Further in the future</span>
+            </div>
+            <div class="items-grid" id="items-grid-coming-up"></div>
+          </section>
+
+          <!-- Someday / No Date Section (Clean, subtle) -->
+          <section class="urgency-group nodate-group" id="group-nodate" style="display: none;">
+            <div class="group-header">
+              <div class="group-title-wrap">
+                <span class="urgency-indicator-dot dot-nodate"></span>
+                <h3 class="group-title">UNSCHEDULED</h3>
+                <span class="group-count" id="count-nodate">0</span>
+              </div>
+              <span class="group-subtitle">Things to handle without a fixed deadline</span>
+            </div>
+            <div class="items-grid" id="items-grid-nodate"></div>
+          </section>
+        </div>
+
+        <!-- Global Dashboard Empty State -->
+        <div class="empty-state-panel" id="dashboard-empty-state" style="display: none;">
+          <div class="empty-icon-wrap">
+            <i data-lucide="check-check"></i>
+          </div>
+          <h3 class="empty-title">Nothing needs your attention 🎉</h3>
+          <p class="empty-desc">Add something you don't want to forget, or take a well-deserved break.</p>
+          <button type="button" class="btn btn-primary" id="btn-empty-add-focus">
+            <i data-lucide="plus"></i>
+            <span>Add something</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 2: TIMELINE VIEW -->
+      <section class="view-panel" id="view-timeline" aria-labelledby="timeline-heading" style="display: none;">
+        <div class="view-header">
+          <div class="view-header-content">
+            <h2 class="view-title" id="timeline-heading">Timeline</h2>
+            <p class="view-subtitle">A chronological view of everything approaching on your horizon.</p>
+          </div>
+        </div>
+
+        <div class="timeline-container" id="timeline-flow">
+          <!-- Dynamically populated vertical chronological nodes -->
+        </div>
+
+        <div class="empty-state-panel" id="timeline-empty-state" style="display: none;">
+          <div class="empty-icon-wrap">
+            <i data-lucide="git-commit"></i>
+          </div>
+          <h3 class="empty-title">Your timeline is clear</h3>
+          <p class="empty-desc">When you add responsibilities with dates, they will automatically appear here chronologically.</p>
+        </div>
+      </section>
+
+      <!-- VIEW 3: UPCOMING VIEW -->
+      <section class="view-panel" id="view-upcoming" aria-labelledby="upcoming-heading" style="display: none;">
+        <div class="view-header">
+          <div class="view-header-content">
+            <h2 class="view-title" id="upcoming-heading">Upcoming</h2>
+            <p class="view-subtitle">What should I be aware of before it becomes urgent?</p>
+          </div>
+        </div>
+
+        <div class="upcoming-horizon-container">
+          <!-- Horizon Block 1: Next 7 Days -->
+          <div class="horizon-block" id="horizon-7-days">
+            <div class="horizon-header">
+              <div class="horizon-title-badge">Next 7 Days</div>
+              <span class="horizon-count" id="count-horizon-7">0 items</span>
+            </div>
+            <div class="items-grid" id="grid-horizon-7"></div>
+          </div>
+
+          <!-- Horizon Block 2: Next 30 Days -->
+          <div class="horizon-block" id="horizon-30-days">
+            <div class="horizon-header">
+              <div class="horizon-title-badge calm">Next 30 Days</div>
+              <span class="horizon-count" id="count-horizon-30">0 items</span>
+            </div>
+            <div class="items-grid" id="grid-horizon-30"></div>
+          </div>
+
+          <!-- Horizon Block 3: Next 3 Months -->
+          <div class="horizon-block" id="horizon-3-months">
+            <div class="horizon-header">
+              <div class="horizon-title-badge future">Next 3 Months</div>
+              <span class="horizon-count" id="count-horizon-90">0 items</span>
+            </div>
+            <div class="items-grid" id="grid-horizon-90"></div>
+          </div>
+
+          <!-- Horizon Block 4: Later -->
+          <div class="horizon-block" id="horizon-later">
+            <div class="horizon-header">
+              <div class="horizon-title-badge distant">Later</div>
+              <span class="horizon-count" id="count-horizon-later">0 items</span>
+            </div>
+            <div class="items-grid" id="grid-horizon-later"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: COMPLETED VIEW -->
+      <section class="view-panel" id="view-completed" aria-labelledby="completed-heading" style="display: none;">
+        <div class="view-header completed-header-bar">
+          <div class="view-header-content">
+            <h2 class="view-title" id="completed-heading">Completed</h2>
+            <p class="view-subtitle">Responsibilities you've taken care of. Restore anytime if needed.</p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-clear-completed" style="display: none;">
+            <i data-lucide="trash-2"></i>
+            <span>Clear History</span>
+          </button>
+        </div>
+
+        <div class="items-grid completed-grid" id="completed-items-grid"></div>
+
+        <div class="empty-state-panel" id="completed-empty-state" style="display: none;">
+          <div class="empty-icon-wrap">
+            <i data-lucide="inbox"></i>
+          </div>
+          <h3 class="empty-title">No completed responsibilities yet</h3>
+          <p class="empty-desc">When you check off items on your dashboard, they will be archived here.</p>
+        </div>
+      </section>
+
+      <!-- VIEW 5: SETTINGS VIEW -->
+      <section class="view-panel" id="view-settings" aria-labelledby="settings-heading" style="display: none;">
+        <div class="view-header">
+          <div class="view-header-content">
+            <h2 class="view-title" id="settings-heading">Settings & Preferences</h2>
+            <p class="view-subtitle">Manage appearance, import/export data, and local privacy.</p>
+          </div>
+        </div>
+
+        <div class="settings-content-wrapper">
+          <!-- Appearance Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <i data-lucide="palette" class="settings-icon"></i>
+              <div>
+                <h3 class="settings-title">Appearance</h3>
+                <p class="settings-desc">Choose how Life Admin looks to suit your workspace.</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="theme-options">
+                <button type="button" class="theme-choice-btn active" data-theme-choice="light">
+                  <i data-lucide="sun"></i>
+                  <span>Light</span>
+                </button>
+                <button type="button" class="theme-choice-btn" data-theme-choice="dark">
+                  <i data-lucide="moon"></i>
+                  <span>Dark</span>
+                </button>
+                <button type="button" class="theme-choice-btn" data-theme-choice="system">
+                  <i data-lucide="laptop"></i>
+                  <span>System</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Backup & Portability Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <i data-lucide="database" class="settings-icon"></i>
+              <div>
+                <h3 class="settings-title">Data Backup & Portability</h3>
+                <p class="settings-desc">Export your records as standard JSON or restore from an existing backup.</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="action-buttons-row">
+                <button type="button" class="btn btn-outline" id="btn-export-data">
+                  <i data-lucide="download"></i>
+                  <span>Export Data (JSON)</span>
+                </button>
+                <label class="btn btn-outline file-input-label" for="import-file-input">
+                  <i data-lucide="upload"></i>
+                  <span>Import Data</span>
+                  <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo & Reset Data Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <i data-lucide="sparkles" class="settings-icon"></i>
+              <div>
+                <h3 class="settings-title">Sample Data</h3>
+                <p class="settings-desc">Populate demo items illustrating diverse categories, dates, and recurrence.</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <button type="button" class="btn btn-outline" id="btn-settings-load-samples">
+                <i data-lucide="refresh-cw"></i>
+                <span>Load Sample Items</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Privacy & Local-First Assurance -->
+          <div class="settings-card highlight-card">
+            <div class="settings-card-header">
+              <i data-lucide="shield-check" class="settings-icon text-success"></i>
+              <div>
+                <h3 class="settings-title">Your data stays in your browser</h3>
+                <p class="settings-desc">Life Admin currently stores your information locally on this device using browser localStorage. No servers, no tracking cookies, and no account required.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger Zone Card -->
+          <div class="settings-card danger-card">
+            <div class="settings-card-header">
+              <i data-lucide="alert-triangle" class="settings-icon text-danger"></i>
+              <div>
+                <h3 class="settings-title text-danger">Clear All Data</h3>
+                <p class="settings-desc">Permanently remove all items and preferences stored on this device.</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <button type="button" class="btn btn-danger" id="btn-trigger-clear-all">
+                <i data-lucide="trash-2"></i>
+                <span>Erase All Records</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- App Information & Shortcuts -->
+          <div class="settings-card info-card">
+            <div class="settings-card-header">
+              <i data-lucide="keyboard" class="settings-icon"></i>
+              <div>
+                <h3 class="settings-title">Keyboard Shortcuts</h3>
+                <p class="settings-desc">Speed up your life admin flow with quick keys.</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <ul class="shortcuts-list">
+                <li><kbd>/</kbd> or <kbd>N</kbd> <span>Focus Quick Add input</span></li>
+                <li><kbd>Esc</kbd> <span>Close open modal or clear search</span></li>
+                <li><kbd>1</kbd>–<kbd>5</kbd> <span>Switch views (Dashboard, Timeline, Upcoming, Completed, Settings)</span></li>
+              </ul>
+              <div class="about-version">
+                <span>Life Admin V1.0.0</span>
+                <span>•</span>
+                <span>"Life Admin — Put it somewhere you'll remember."</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="bottom-nav" aria-label="Mobile Navigation">
+      <button class="bottom-nav-item active" data-view="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Today</span>
+      </button>
+      <button class="bottom-nav-item" data-view="timeline">
+        <i data-lucide="git-commit"></i>
+        <span>Timeline</span>
+      </button>
+      <button class="bottom-nav-item" data-view="upcoming">
+        <i data-lucide="calendar-range"></i>
+        <span>Upcoming</span>
+      </button>
+      <button class="bottom-nav-item" data-view="completed">
+        <i data-lucide="check-circle-2"></i>
+        <span>Done</span>
+      </button>
+      <button class="bottom-nav-item" data-view="settings">
+        <i data-lucide="sliders-horizontal"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL 1: Quick Date Clarification Modal (When NLP didn't detect a confident date) -->
+  <div class="modal-backdrop" id="modal-date-prompt" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="date-prompt-title">
+    <div class="modal-dialog date-prompt-dialog">
+      <div class="modal-header">
+        <div class="prompt-icon">
+          <i data-lucide="calendar-clock"></i>
+        </div>
+        <div>
+          <h3 class="modal-title" id="date-prompt-title">When do you need to take care of this?</h3>
+          <p class="modal-subtitle" id="prompt-item-preview">"Title"</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="date-quick-options">
+          <button type="button" class="btn btn-outline prompt-opt-btn" data-choice="today">
+            <span class="opt-label">🔴 Today</span>
+            <span class="opt-desc">Needs attention now</span>
+          </button>
+          <button type="button" class="btn btn-outline prompt-opt-btn" data-choice="tomorrow">
+            <span class="opt-label">🟠 Tomorrow</span>
+            <span class="opt-desc">First thing tomorrow</span>
+          </button>
+          <button type="button" class="btn btn-outline prompt-opt-btn" data-choice="this-week">
+            <span class="opt-label">🟡 This week</span>
+            <span class="opt-desc">Within 7 days</span>
+          </button>
+          <button type="button" class="btn btn-outline prompt-opt-btn" data-choice="no-date">
+            <span class="opt-label">⚪ No date</span>
+            <span class="opt-desc">Review anytime</span>
+          </button>
+        </div>
+
+        <div class="custom-date-picker-wrap">
+          <label for="prompt-custom-date" class="form-label">Or pick a specific date:</label>
+          <div class="input-with-button">
+            <input type="date" id="prompt-custom-date" class="form-input">
+            <button type="button" class="btn btn-primary" id="btn-confirm-prompt-custom">Save Date</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-date-prompt">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Edit Item Modal -->
+  <div class="modal-backdrop" id="modal-edit-item" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="edit-modal-title">Edit Responsibility</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-edit-modal" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="edit-item-form">
+        <input type="hidden" id="edit-item-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-title" class="form-label">Title <span class="required">*</span></label>
+            <input type="text" id="edit-title" class="form-input" required placeholder="e.g. Renew passport">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="edit-category" class="form-label">Category</label>
+              <select id="edit-category" class="form-input">
+                <option value="documents">📄 Documents</option>
+                <option value="education">🎓 Education</option>
+                <option value="payments">💳 Payments</option>
+                <option value="renewals">🔄 Renewals</option>
+                <option value="warranties">🛠️ Warranties</option>
+                <option value="appointments">📅 Appointments</option>
+                <option value="applications">📝 Applications</option>
+                <option value="events">🎫 Events</option>
+                <option value="subscriptions">📦 Subscriptions</option>
+                <option value="personal">🏠 Personal</option>
+                <option value="other">📌 Other</option>
+              </select>
+            </div>
+            <div class="form-group col-half">
+              <label for="edit-recurrence" class="form-label">Recurrence</label>
+              <select id="edit-recurrence" class="form-input">
+                <option value="none">One-time (No recurrence)</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="edit-date" class="form-label">Due Date</label>
+              <input type="date" id="edit-date" class="form-input">
+            </div>
+            <div class="form-group col-half">
+              <label for="edit-time" class="form-label">Time (optional)</label>
+              <input type="time" id="edit-time" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-notes" class="form-label">Notes or Reference (optional)</label>
+            <textarea id="edit-notes" class="form-textarea" rows="2" placeholder="Account numbers, locations, link references..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-edit">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-edit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Confirmation Modal (Delete / Clear All) -->
+  <div class="modal-backdrop" id="modal-confirm" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <div class="prompt-icon icon-danger">
+          <i data-lucide="alert-triangle"></i>
+        </div>
+        <div>
+          <h3 class="modal-title" id="confirm-modal-title">Confirm Action</h3>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btn-confirm-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-proceed">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER (With Undo support) -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- Core JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
